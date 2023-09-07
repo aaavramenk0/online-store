@@ -1,0 +1,93 @@
+@import "./mixins.scss";
+
+.heading-causten {
+  @apply font-causten font-semibold  leading-[120%];
+  @include adaptive-value("font-size", 56, 42);
+}
+
+.h1-causten {
+  @apply font-causten font-semibold leading-[120%];
+  @include adaptive-value("font-size", 48, 32);
+}
+.h2-causten {
+  @apply font-semibold leading-[120%] font-causten;
+  @include adaptive-value("font-size", 40, 28);
+}
+
+.h3-causten {
+  @apply font-causten font-semibold leading-[120%];
+  @include adaptive-value("font-size", 32, 24);
+  font-feature-settings:
+    "clig" off,
+    "liga" off;
+}
+.h4-causten {
+  @apply font-causten leading-[120%] font-semibold;
+  @include adaptive-value("font-size", 24, 20);
+}
+
+.h5-causten {
+  @apply font-causten font-semibold leading-[140%];
+  @include adaptive-value("font-size", 20, 18);
+}
+.button-causten {
+  @apply font-causten font-medium text-center ;
+  @include adaptive-value('font-size',18,16);
+  line-height: normal;
+}
+.p-causten {
+  @apply leading-normal font-causten font-semibold;
+  @include adaptive-value("font-size", 16, 14);
+}
+
+.label-causten {
+  @apply font-causten font-semibold leading-[140%];
+  font-size: 0.875rem;
+}
+.small-causten {
+  @apply font-semibold font-causten;
+  font-size: 0.75rem;
+  line-height: normal;
+}
+
+.tiny-causten {
+  @apply font-causten font-semibold;
+  font-size: 0.625rem;
+}
+
+.heading-core-sans {
+  @apply font-coreSans leading-[120%] font-bold;
+  @include adaptive-value("font-size", 56, 42);
+}
+.h1-core-sans {
+  @apply font-coreSans leading-[120%] font-bold;
+  @include adaptive-value("font-size", 48, 32);
+}
+
+.h2-core-sans {
+  @apply font-coreSans font-bold leading-[120%];
+  @include adaptive-value("font-size", 40, 28);
+}
+
+.h3-core-sans {
+  @apply font-coreSans font-bold leading-[120%];
+  font-feature-settings:
+    "clig" off,
+    "liga" off;
+  @include adaptive-value("font-size", 32, 24);
+}
+
+.h4-core-sans {
+  @apply font-coreSans leading-[120%] font-bold;
+  @include adaptive-value("font-size", 24, 20);
+}
+
+.h5-core-sans {
+  @apply font-coreSans font-bold leading-[140%];
+  @include adaptive-value("font-size", 20, 18);
+}
+
+.h6-core-sans {
+  @apply font-coreSans font-bold leading-normal;
+  @include adaptive-value("font-size", 16, 14);
+}

@@ -1,0 +1,16 @@
+$brand-primary: #3c4242;
+$brand-secondary: #807d7e;
+$brand-accent: #8a33fd;
+$brand-dark:#2A2F2F;
+$brand-gray: #807d7e;
+$brand-light-gray: #bebcbd;
+$brand-light: #edeef2;
+$brand-white: #f6f6f6;
+$brand-accent-darker: #6620c1;
+$brand-disabled: #EAEAEA;
+
+//Змінні для міксину
+$maxWidth: 1440; //Ширина макету
+$maxWidthContainer: 1160; // Ширина контейнера без padding
+$containerPadding: 20;
+$containerWidth: calc($maxWidthContainer + $containerPadding * 2);

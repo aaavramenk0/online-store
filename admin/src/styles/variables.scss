@@ -1,0 +1,7 @@
+
+
+//Змінні для міксину
+$maxWidth: 1440; //Ширина макету
+$maxWidthContainer: 1160; // Ширина контейнера без padding
+$containerPadding: 20;
+$containerWidth: calc($maxWidthContainer + $containerPadding * 2);
