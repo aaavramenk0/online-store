@@ -10,9 +10,402 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-//Тестова модель для ініціалізації prisma
+// COMMON
+
+type Image {
+  url String @db.String
+  key String @db.String
+}
+
+type Avatar {
+  url String  @db.String
+  key String? @db.String
+}
+
+// USER
+
+enum UserRole {
+  Admin
+  Manager
+  Customer
+}
+
 model User {
-  id    String  @id @default(auto()) @map("_id") @db.ObjectId   
-  email String  @unique
-  name  String?
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  // Інформація про користувача
+  username String
+  email    String   @unique
+  avatar   Avatar?
+  role     UserRole @default(Customer)
+  phone    String?
+
+  // Інформація для авторизації , ресету пароля чи підтвердження електронної адреси
+  verificationCode  VerificationCode[]
+  passwordResetLink PasswordResetLink[]
+  hash              String?             @db.String
+  hashedRt          String?             @db.String
+  googleId          String?             @db.String
+  twitterId         String?             @db.String
+  emailVerified     Boolean             @default(false)
+
+  deliveryAddress DeliveryAddress[]
+  wishlist        WishlistItem[]
+  orders          Order[]
+  createdProducts Product[]
+  feedback        Feedback[]
+  Cart            Cart[]
+
+  // Коментарії під продуктами
+  productComments     ProductComment[]
+  productCommentVotes ProductCommentVote[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationCode {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.ObjectId
+
+  code String @db.String
+
+  expiration DateTime
+  createdAt  DateTime @default(now())
+}
+
+model PasswordResetLink {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  link String @db.String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.ObjectId
+
+  expiration DateTime
+  createdAt  DateTime @default(now())
+}
+
+enum DeliveryAddressType {
+  SHIPPING_ADDRESS
+  BILLING_ADDRESS
+}
+
+model DeliveryAddress {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId
+
+  addressType DeliveryAddressType?
+
+  default Boolean? @default(false)
+
+  apartment String?
+
+  // Delivery info
+  firstName           String
+  lastName            String
+  country             String
+  street              String
+  city                String
+  state               String
+  companyName         String?
+  phone               String
+  postalCode          String
+  deliveryInstruction String  @db.String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// WISHLIST
+model WishlistItem {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.ObjectId
+
+  quantity Int
+
+  productId String  @db.ObjectId
+  product   Product @relation(fields: [productId], references: [id])
+
+  // Інформація про предмет, що ми додали до нашого wishlist
+  imageUrl String @db.String
+  color    String
+  price    Int
+  title    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ORDERS
+
+enum OrderStatus {
+  Inprogress
+  Shipped
+  Delivered
+  Placed
+}
+
+enum PaymentMethod {
+  CreditCard
+  CashOnDelivery
+  Paypol
+}
+
+model Order {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.ObjectId
+
+  status OrderStatus
+
+  orderNumber String
+
+  paymentMethod PaymentMethod
+
+  totalPrice Int
+
+  orderDetails  OrderDetails[]
+  orderMessages OrderNews[]
+
+  estimatedDeliveryDate DateTime
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model OrderDetails {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  order   Order  @relation(fields: [orderId], references: [id])
+  orderId String @db.ObjectId
+
+  productId String  @db.ObjectId
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Інформація про продукт, який ми замовили.
+  imageUrl String @db.String
+  color    String
+  quantity Int
+  price    Int
+  title    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderNews {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  message String
+  status  OrderStatus
+
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String @db.ObjectId
+}
+
+// SALES
+
+model Sale {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  discounts Discount[]
+  dicsount  Int
+
+  // TODO: Додати поля всі необхідні поля для знижок
+
+  createdAt  DateTime @default(now())
+  expiration DateTime
+}
+
+model Discount {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String  @db.ObjectId
+
+  sale   Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  saleId String @db.ObjectId
+}
+
+// PRODUCT
+enum ProductType {
+  Men
+  Women
+  Combos
+  Joggers
+}
+
+enum ProductCategory {
+  Top
+  Printed_T_Shirt
+  Plain_T_Shirt
+  Kurti
+  Boxers
+  Full_Sleeve_T_Shirt
+  Joggers
+  Jeans
+  Payjamas
+}
+
+enum ProductSize {
+  XXS
+  XL
+  XS
+  S
+  M
+  L
+  XXL
+  XXXL
+  XXXXL
+}
+
+enum ProductStyle {
+  Classic
+  Casual
+  Business
+  Sport
+  Elegant
+  Formal
+}
+
+enum ProductInfoType {
+  Fabric
+  Pattern
+  Fit
+  Neck
+  Sleeve
+  Style
+}
+
+enum ProductFeatureType {
+  Payment
+  Delivery
+  Size
+  Returns
+}
+
+type ProductInfo {
+  type        ProductInfoType
+  description String
+}
+
+type ProductFeature {
+  type        String
+  description String
+}
+
+model Product {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  creatorId String @db.ObjectId
+  creator   User   @relation(fields: [creatorId], references: [id])
+
+  type        ProductType[]
+  category    ProductCategory
+  discount    Int?
+  colors      String[]
+  size        ProductSize[]
+  style       ProductStyle
+  photos      Image[]
+  description String
+  info        ProductInfo[]
+  features    ProductFeature[]
+  videoUrl    String?          @db.String
+
+  prices   ProductPriceMap[]
+  comments ProductComment[]
+
+  // References
+  wishlist  WishlistItem[]
+  orders    OrderDetails[]
+  carts     Cart[]
+  discounts Discount[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+type ProductPriceMap {
+  size  ProductSize
+  price Int
+}
+
+model ProductComment {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String  @db.ObjectId
+
+  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId String @db.ObjectId
+
+  description String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Відповіді на цей коментар
+  replies   ProductComment[] @relation("reply")
+  replyTo   ProductComment   @relation("reply", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replyToId String           @db.ObjectId
+
+  votes ProductCommentVote[]
+}
+
+enum ProcuctCommentVoteType {
+  Like
+  Dislike
+}
+
+model ProductCommentVote {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  comment   ProductComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId String         @db.ObjectId
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type ProcuctCommentVoteType
+}
+
+// FEEDBACK
+model Feedback {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.ObjectId
+
+  feedback String
+  rating   Int
+}
+
+// CART
+
+model Cart {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String  @db.ObjectId
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  imageUrl  String      @db.String
+  title     String
+  color     String
+  size      ProductSize
+  price     Int
+  quantity  Int
+  shippping Int         @default(0)
 }

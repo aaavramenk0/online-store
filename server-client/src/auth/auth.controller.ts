@@ -17,7 +17,7 @@ import { GetCurrentUserId } from 'src/common/decorators';
 import { GoogleOauthGuard, TwitterGuard, RtGuard } from 'src/auth/guard';
 
 import { AuthService } from './auth.service';
-import { SignInDto, SignUpDto } from './dto';
+import { LogOutDto, SignInDto, SignUpDto } from './dto';
 
 import { TOKENS } from '../constants';
 import { AtGuard } from 'src/common/guard';
@@ -100,6 +100,10 @@ export class AuthController {
   }
 
 
+  @ApiBody({
+    type: LogOutDto,
+    required: false
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: "The user has successfully logged out"
@@ -115,11 +119,16 @@ export class AuthController {
   @Post('log-out')
   @UseGuards(AtGuard)
   @HttpCode(HttpStatus.OK)
-  async logOut(@GetCurrentUserId() userId: string, @Res() res: Response) {
+  async logOut(@GetCurrentUserId() userId: string, @Res() res: Response, @Body() dto: LogOutDto) {
     res.clearCookie(TOKENS.ACCESS_TOKEN);
     res.clearCookie(TOKENS.REFRESH_TOKEN);
 
     const result = await this.authService.logOut(userId);
+    
+    if (dto.redirectUrl) {
+      return res.send(result).redirect(dto.redirectUrl)
+    }
+
     return res.send(result);
   }
 

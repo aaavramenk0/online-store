@@ -64,7 +64,7 @@ Before you can run the Online Store Website locally, make sure you have the foll
 
 1. Clone the repository:
    ```shell
-   git clone https://github.com/aaavramenk0/online-store.git
+   git clone -b auth https://github.com/aaavramenk0/online-store.git
    cd online-store
    ```
 2. Install frontend dependencies:

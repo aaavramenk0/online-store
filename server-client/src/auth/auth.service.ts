@@ -2,9 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  InternalServerErrorException,
   BadRequestException,
-  HttpException,
   UnauthorizedException,
   ConflictException,
 } from '@nestjs/common';
@@ -20,6 +18,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { SignInDto, SignUpDto } from './dto';
 import { TypeTokenDecoded, TypeTokens } from '../types/token.d';
 import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from '../constants';
+import { generateErrorResponse } from 'src/helpers';
 
 @Injectable()
 export class AuthService {
@@ -66,7 +65,7 @@ export class AuthService {
 
       return tokens;
     } catch (err) {
-      this.generateErrorResponse(err, {
+      throw generateErrorResponse(err, {
         message: 'Internal Error',
         description: 'auth/internal-error',
       });
@@ -109,7 +108,7 @@ export class AuthService {
 
       return tokens
     } catch (err) {
-      this.generateErrorResponse(err, {
+      throw generateErrorResponse(err, {
         message: 'Internal Error',
         description: 'auth/internal-error',
       });
@@ -149,7 +148,7 @@ export class AuthService {
         userExists.emailVerified,
       );
     } catch (err) {
-      this.generateErrorResponse(err, {
+      throw generateErrorResponse(err, {
         message: 'Internal Error',
         description: 'auth/internal-error',
       });
@@ -185,7 +184,7 @@ export class AuthService {
         userExists.emailVerified,
       );
     } catch (err) {
-      this.generateErrorResponse(err, {
+      throw generateErrorResponse(err, {
         message: 'Internal Error',
         description: 'auth/internal-error',
       });
@@ -216,7 +215,7 @@ export class AuthService {
         },
       });
     } catch (err) {
-      this.generateErrorResponse(err, {
+      throw generateErrorResponse(err, {
         message: 'Failed to log out',
         description: 'auth/log-out-fail',
       });
@@ -273,7 +272,7 @@ export class AuthService {
       await this.updateRtHash(user.id, tokens.refresh_token);
       return tokens;
     } catch (err) {
-      this.generateErrorResponse(err, {
+      throw generateErrorResponse(err, {
         message: 'Internal Error',
         description: 'auth/internal-error',
       });
@@ -333,33 +332,5 @@ export class AuthService {
     ]);
 
     return { access_token: at, refresh_token: rt };
-  }
-
-  private generateErrorResponse(
-    err: any,
-    {
-      message,
-      description,
-      cause,
-    }: { message?: string; description?: string; cause?: string } = undefined,
-  ) {
-    if (err instanceof HttpException) {
-      let description;
-
-      if (typeof err.getResponse() === 'string') {
-        description = err.getResponse();
-      } else {
-        const response = err.getResponse() as { error?: string };
-        description = response?.error;
-      }
-      throw new HttpException(err.message, err.getStatus(), {
-        description,
-        cause: err.cause,
-      });
-    }
-    throw new InternalServerErrorException(message, {
-      description,
-      cause,
-    });
   }
 }

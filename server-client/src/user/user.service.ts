@@ -1,4 +1,4 @@
-import { HttpException, Injectable, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {  Injectable, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt'
 
 import { PrismaClientKnownRequestError, PrismaClientUnknownRequestError, PrismaClientValidationError } from '@prisma/client/runtime/library';
@@ -9,6 +9,7 @@ import { UpdateUserDto } from './dto';
 import { MailService } from 'src/mail/mail.service';
 import { Job, scheduleJob } from 'node-schedule';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { generateErrorResponse } from 'src/helpers';
 
 
 
@@ -29,7 +30,7 @@ export class UserService {
 
       return user
     } catch (err) {
-      this.generateErrorResponse(err, { message: 'Cannot get user', cause: 'Internal error', description: 'user/internal-error' })
+      throw generateErrorResponse(err, { message: 'Cannot get user', cause: 'Internal error', description: 'user/internal-error' })
     }
   }
 
@@ -67,7 +68,7 @@ export class UserService {
         throw new InternalServerErrorException('Failed to update user', { description: 'user/update-failed' })
       })
     } catch (err) {
-      this.generateErrorResponse(err, { message: 'Cannot update user', cause: 'Internal error', description: 'user/internal-error' })
+      throw generateErrorResponse(err, { message: 'Cannot update user', cause: 'Internal error', description: 'user/internal-error' })
     }
   }
 
@@ -80,17 +81,20 @@ export class UserService {
 
   public async deleteUser(userId: string) {
     try {
-      const {avatar} = await this.prisma.user.findUnique({
+      const user = await this.prisma.user.findUnique({
         where: {
-          id: userId
+          id: userId,
+          role: {
+            not: "Admin"
+          }
         },
         select: {
           avatar: true
         }
       })
 
-      if (avatar && avatar.key) {
-        await this.cloudinary.destroy(avatar.key)
+      if (user.avatar && user.avatar.key) {
+        await this.cloudinary.destroy(user.avatar.key)
       }
 
       return await this.prisma.user.delete({
@@ -111,7 +115,7 @@ export class UserService {
         throw new InternalServerErrorException('Failed to delete user', { description: 'user/update-failed' })
       })
     } catch (err) {
-      this.generateErrorResponse(err, { message: "Cannot delete user", description: 'user/internal-error', cause: "Internal error" })
+      throw generateErrorResponse(err, { message: "Cannot delete user", description: 'user/internal-error', cause: "Internal error" })
     }
   }
 
@@ -156,7 +160,7 @@ export class UserService {
 
       return dbVerificationCodeObject
     } catch (err) {
-      this.generateErrorResponse(err, { message: "Internal Error", description: 'user/internal-error', cause: "Internal error" })
+      throw generateErrorResponse(err, { message: "Internal Error", description: 'user/internal-error', cause: "Internal error" })
     }
   }
 
@@ -194,7 +198,7 @@ export class UserService {
         }
       })
     } catch (err) {
-      this.generateErrorResponse(err, { message: "Verification Error", description: 'user/internal-error', cause: "Internal error" })
+      throw  generateErrorResponse(err, { message: "Verification Error", description: 'user/internal-error', cause: "Internal error" })
     }
   }
 
@@ -235,7 +239,7 @@ export class UserService {
         message: "Email successfully verified"
       }
     } catch (err) {
-      this.generateErrorResponse(err, { message: "Verification Error", description: 'user/internal-error', cause: "Internal error" })
+      throw generateErrorResponse(err, { message: "Verification Error", description: 'user/internal-error', cause: "Internal error" })
     }
   }
 
@@ -253,33 +257,6 @@ export class UserService {
 
 
 
-  private generateErrorResponse(
-    err: any,
-    {
-      message,
-      description,
-      cause,
-    }: { message?: string; description?: string; cause?: string } = undefined,
-  ) {
-    if (err instanceof HttpException) {
-      let description;
-
-      if (typeof err.getResponse() === 'string') {
-        description = err.getResponse();
-      } else {
-        const response = err.getResponse() as { error?: string };
-        description = response?.error;
-      }
-      throw new HttpException(err.message, err.getStatus(), {
-        description,
-        cause: err.cause,
-      });
-    }
-    throw new InternalServerErrorException(message, {
-      description,
-      cause,
-    });
-  }
 
   private async hashData(data: string) {
     const salt = await bcrypt.genSalt(10);
