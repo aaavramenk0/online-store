@@ -8,12 +8,13 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDto } from './dto';
 import { MailService } from 'src/mail/mail.service';
 import { Job, scheduleJob } from 'node-schedule';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService, private mailer: MailService) { }
+  constructor(private prisma: PrismaService, private mailer: MailService, private cloudinary: CloudinaryService) { }
 
 
   public async getUser(userId: string) {
@@ -79,7 +80,19 @@ export class UserService {
 
   public async deleteUser(userId: string) {
     try {
-      //TODO: Видалити аватар користувача з хмари
+      const {avatar} = await this.prisma.user.findUnique({
+        where: {
+          id: userId
+        },
+        select: {
+          avatar: true
+        }
+      })
+
+      if (avatar && avatar.key) {
+        await this.cloudinary.destroy(avatar.key)
+      }
+
       return await this.prisma.user.delete({
         where: {
           id: userId,
@@ -93,7 +106,7 @@ export class UserService {
           if (err.code === 'P2025') throw new NotFoundException('User not found', { description: 'user/user-not-found' })
 
           //P2023 - Inconsistent column data
-          if (err.code === 'P2023') throw new BadRequestException("Invalid data", { description: 'user/validation-error', cause: err.message })
+          if (err.code === 'P2023') throw new BadRequestException("Invalid user id", { description: 'user/validation-error', cause: err.message })
         }
         throw new InternalServerErrorException('Failed to delete user', { description: 'user/update-failed' })
       })

@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { TokenExceptionFilter } from './common/filters';
 import { MailModule } from './mail/mail.module';
 import { UserModule } from './user/user.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UserModule } from './user/user.module';
     AuthModule,
     MailModule,
     UserModule,
+    CloudinaryModule,
   ],
   providers: [
     {

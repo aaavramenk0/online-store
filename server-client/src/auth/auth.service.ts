@@ -10,7 +10,10 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+
+
 import { User, UserRole } from '@prisma/client';
+
 
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -23,7 +26,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   //Реєструємо нового користувача
   public async signUpLocal(dto: SignUpDto): Promise<TypeTokens> {
@@ -47,7 +50,7 @@ export class AuthService {
         data: {
           email: dto.email,
           hash,
-          username:dto.username
+          username: dto.username
         },
       });
       //Отримуємо токени та повертаємо їх
@@ -230,8 +233,8 @@ export class AuthService {
       //Якщо токен не є валідним, тобто його час експірації вичерпався, то повертаємо помилку
       if (tokenDecoded.exp < now) {
         throw new UnauthorizedException('Unauthorized', {
-          cause: new Error(),
-          description: 'Unauthorized',
+          cause: "The refresh token has expired",
+          description:"auth/invalid-refresh-token"
         });
       }
 
@@ -247,8 +250,8 @@ export class AuthService {
         });
 
       if (!user?.hashedRt)
-        throw new ForbiddenException('Cannot refresh tokens', {
-          cause: 'User is log out',
+        throw new UnauthorizedException('Cannot refresh tokens', {
+          cause: 'User is not logged in',
           description: 'auth/refresh-error',
         });
 

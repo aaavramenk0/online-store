@@ -33,7 +33,7 @@ export class SignUpDto {
   @ApiProperty({
     type: String,
     example: "John Doe",
-    description:"User's name"
+    description:"Username"
   })
   @IsNotEmpty()
   @IsString()

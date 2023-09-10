@@ -43,8 +43,7 @@ export class MailService {
     try {
       await this.mailer.sendMail({
         to: user.email,
-        //TODO: Замінити subject
-        subject: 'Welcome to Euphoria Shop! Please, confirm your Email',
+        subject: 'Here is the link to the password reset',
         template: './passwordReset.hbs',
         context: {
           link,

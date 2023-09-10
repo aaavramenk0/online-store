@@ -54,6 +54,7 @@ model User {
   orders          Order[]
   createdProducts Product[]
   feedback        Feedback[]
+  Cart            Cart[]
 
   //Коментарії під продуктами
   productComments     ProductComment[]
@@ -61,7 +62,6 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  Cart      Cart[]
 }
 
 model VerificationCode {
@@ -335,12 +335,7 @@ model Product {
   updatedAt DateTime @updatedAt
 }
 
-model ProductPriceMap {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-
-  productId String  @db.ObjectId
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
+type ProductPriceMap {
   size  ProductSize
   price Int
 }
