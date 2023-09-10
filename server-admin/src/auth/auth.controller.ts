@@ -46,15 +46,15 @@ export class AuthController {
     @Post('sign-in')
     @HttpCode(HttpStatus.OK)
     async signIn(@Body() dto: SignInDto, @Res() res: Response) {
-        const { token } = await this.authService.signIn(dto)
+        const userData = await this.authService.signIn(dto)
 
-        res.cookie(TOKENS.TOKEN, token, {
+        res.cookie(TOKENS.TOKEN, userData.token, {
             httpOnly: true,
             //TODO: Змінити це значення, на термін дії токена
             maxAge: 1000 * 60 * 30
         })
 
-        return res.send({ token })
+        return res.send(userData)
     }
 
 

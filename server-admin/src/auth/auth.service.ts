@@ -8,7 +8,7 @@ import { SignInDto } from "./dto/sign-in.dto";
 import { generateErrorResponse } from "../helpers";
 import { TypeTokens } from "../types/token.d";
 import * as bcrypt from 'bcrypt'
-import { UserRole } from "@prisma/client";
+import { User, UserRole } from "@prisma/client";
 import { TOKEN_SECRET } from "../constants";
 import { JwtService } from "@nestjs/jwt";
 
@@ -17,7 +17,7 @@ import { JwtService } from "@nestjs/jwt";
 export class AuthService {
     constructor(private prisma: PrismaService, private jwtService: JwtService) { }
 
-    public async signIn(dto: SignInDto): Promise<TypeTokens> {
+    public async signIn(dto: SignInDto): Promise<{ token: Pick<TypeTokens, 'token'>, user: User }> {
         try {
             const user = await this.prisma.user.findUnique({
                 where: {
@@ -39,14 +39,16 @@ export class AuthService {
                     description: 'auth/passwords-do-not-match',
                 });
 
-            return await this.getToken(
+            const token = await this.getToken(
                 user.id,
                 user.email,
                 user.role,
                 user.emailVerified,
             );
-
-
+            return {
+                token,
+                user
+            }
         } catch (err) {
             throw generateErrorResponse(err, { description: 'auth/internal-error' })
         }
