@@ -24,11 +24,27 @@ The technical stack used in this project includes:
 
   - [Next.js](https://nextjs.org/) - A React framework for building web applications.
   - [TypeScript](https://www.typescriptlang.org/) - A statically typed superset of JavaScript for enhanced code quality and developer productivity.
-  - [shadcn-ui](https://github.com/shadcn/shadcn-ui) - A UI library for building elegant and responsive user interfaces.
+  - [Shadcn-ui](https://github.com/shadcn/shadcn-ui) - A UI library for building elegant and responsive user interfaces.
+  - [Tanstack Query](https://tanstack.com/query/latest) - Powerful asynchronous state management for TS/JS, React, Solid, Vue and Svelte
+  - [TailwindCss](https://tailwindcss.com/) - A utility-first CSS framework packed with classes that can be composed to build any design, directly in your markup.
+  - [Zod](https://zod.dev/) - TypeScript-first schema validation with static type inference
+  - [Zustand](https://zustand-demo.pmnd.rs/) - A small, fast, and scalable bearbones state management solution.
+
+- **Admin Panel**:
+
+  - [React](https://react.dev/) - The library for web and native user interfaces
+  - [TypeScript](https://www.typescriptlang.org/) - A statically typed superset of JavaScript for enhanced code quality and developer productivity.
+  - [Shadcn-ui](https://github.com/shadcn/shadcn-ui) - A UI library for building elegant and responsive user interfaces.
+  - [Tanstack Query](https://tanstack.com/query/latest) - Powerful asynchronous state management for TS/JS, React, Solid, Vue and Svelte
+  - [TailwindCss](https://tailwindcss.com/) - A utility-first CSS framework packed with classes that can be composed to build any design, directly in your markup.
+  - [Zod](https://zod.dev/) - TypeScript-first schema validation with static type inference
 
 - **Backend**:
 
   - [Nest.js](https://nestjs.com/) - A progressive Node.js framework for building efficient and scalable server-side applications.
+  - [TypeScript](https://www.typescriptlang.org/) - A statically typed superset of JavaScript for enhanced code quality and developer productivity.
+  - [Swagger](https://swagger.io/) - A set of tools for describing an Api
+  - [Cloudinary](https://cloudinary.com/) - Provides cloud-based image and video management services
 
 - **Database**:
 
@@ -48,7 +64,7 @@ Before you can run the Online Store Website locally, make sure you have the foll
 
 1. Clone the repository:
    ```shell
-   git clone https://github.com/aaavramenk0/online-store.git
+   git clone -b auth https://github.com/aaavramenk0/online-store.git
    cd online-store
    ```
 2. Install frontend dependencies:
