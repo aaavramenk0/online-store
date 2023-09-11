@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import {APP_GUARD} from "@nestjs/core";
 import {AtGuard, RolesGuard} from "./common/guard";
+import { UserModule } from './user/user.module';
 
 
 @Module({
@@ -11,7 +12,8 @@ import {AtGuard, RolesGuard} from "./common/guard";
     isGlobal:true
   }),
     PrismaModule,
-    AuthModule],
+    AuthModule,
+    UserModule],
   providers: [
     {
       provide: APP_GUARD,

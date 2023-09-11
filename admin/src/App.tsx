@@ -1,16 +1,15 @@
-import '@/styles/globals.scss'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-const queryClient = new QueryClient({
-	defaultOptions: {
-		queries: {
-			refetchOnWindowFocus: false
-		}
-	}
-})
+
+import '@/styles/globals.scss'
+import { ThemeProvider } from './components'
+
 
 function App() {
-	return <QueryClientProvider client={queryClient}></QueryClientProvider>
+	return (
+		<ThemeProvider storageKey='euphoria-admin:theme'>
+			<></>
+		</ThemeProvider>
+	)
 }
 
 export default App
