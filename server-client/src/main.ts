@@ -24,7 +24,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1');
   app.enableCors({
-    origin: [process.env.CLIENT_URL, process.env.ADMIN_PANEL_URL],
+    origin: [process.env.CLIENT_URL],
     credentials: true,
   });
   app.use(CookieParser());
