@@ -7,7 +7,7 @@ import { ApiBody, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 
 @ApiTags('user')
-@UseGuards(AtGuard, UserGuard)
+@UseGuards(UserGuard)
 @Controller('user')
 export class UserController {
   constructor(private userService: UserService) { }
@@ -33,7 +33,8 @@ export class UserController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: "Internal Server Error"
   })
-  @Get('/:id')
+  @UseGuards(AtGuard)
+  @Get('/get/:id')
   @HttpCode(HttpStatus.OK)
   getUser(@Param('id') userId: string) {
     return this.userService.getUser(userId)
@@ -55,6 +56,7 @@ export class UserController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: "Internal Server Error"
   })
+  @UseGuards(AtGuard)
   @Post('/:id/email/verify/send')
   @HttpCode(HttpStatus.OK)
   sendVerificationCode(@Param('id') userId: string) {
@@ -77,6 +79,7 @@ export class UserController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: "Internal Server Error"
   })
+  @UseGuards(AtGuard)
   @Post("/:id/password/reset")
   @HttpCode(HttpStatus.OK)
   sendPassword(@Param("id") userId: string, @Body() dto: PasswordResetDto) {
@@ -134,7 +137,8 @@ export class UserController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: "Internal Server Error"
   })
-  @Patch('/:id')
+  @UseGuards(AtGuard)
+  @Patch('/update/:id')
   @HttpCode(HttpStatus.OK)
   updateUser(@Param("id") userId: string, @Body() dto: UpdateUserDto) {
     return this.userService.updateUserInfo(dto, userId)
@@ -143,7 +147,7 @@ export class UserController {
 
 
   //TODO: Додати функціонал зміни автара користувача
-  @Patch("/:id/avatar")
+  @Patch("/update/:id/avatar")
   @HttpCode(HttpStatus.OK)
   updateUserAvatar(@Param("id") userId: string) {
     return this.userService.updateUserAvatar(userId)
@@ -174,7 +178,7 @@ export class UserController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: "Internal Server Error"
   })
-  @Delete('/:id')
+  @Delete('/delete/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteUser(@Param('id') userId: string) {
     return this.userService.deleteUser(userId)

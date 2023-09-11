@@ -45,19 +45,20 @@ export class AuthController {
   @Post('sign-up')
   @HttpCode(HttpStatus.CREATED)
   async signUp(@Body() dto: SignUpDto, @Res() res: Response) {
-    const tokens = await this.authService.signUpLocal(dto);
+    const userData = await this.authService.signUpLocal(dto);
 
-    res.cookie(TOKENS.ACCESS_TOKEN, tokens.access_token, {
+    res.cookie(TOKENS.ACCESS_TOKEN, userData.tokens.access_token, {
       httpOnly: false,
       maxAge: 1000 * 60 * 30,
     });
-    res.cookie(TOKENS.REFRESH_TOKEN, tokens.refresh_token, {
+    res.cookie(TOKENS.REFRESH_TOKEN, userData.tokens.refresh_token, {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
-    return res.send(tokens);
+    return res.send(userData);
   }
+
 
   @ApiBody({
     type: SignInDto,
@@ -85,18 +86,18 @@ export class AuthController {
   @Post('sign-in')
   @HttpCode(HttpStatus.OK)
   async signInLocal(@Body() dto: SignInDto, @Res() res: Response) {
-    const tokens = await this.authService.signInLocal(dto);
+    const userData = await this.authService.signInLocal(dto);
 
-    res.cookie(TOKENS.ACCESS_TOKEN, tokens.access_token, {
+    res.cookie(TOKENS.ACCESS_TOKEN, userData.tokens.access_token, {
       httpOnly: false,
       maxAge: 1000 * 60 * 30,
     });
-    res.cookie(TOKENS.REFRESH_TOKEN, tokens.refresh_token, {
+    res.cookie(TOKENS.REFRESH_TOKEN, userData.tokens.refresh_token, {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
-    return res.send(tokens);
+    return res.send(userData);
   }
 
 
@@ -123,14 +124,15 @@ export class AuthController {
     res.clearCookie(TOKENS.ACCESS_TOKEN);
     res.clearCookie(TOKENS.REFRESH_TOKEN);
 
-    const result = await this.authService.logOut(userId);
-    
+    await this.authService.logOut(userId);
+
     if (dto.redirectUrl) {
-      return res.send(result).redirect(dto.redirectUrl)
+      return res.send({ message: "You have successfully logged out!" }).redirect(dto.redirectUrl)
     }
 
-    return res.send(result);
+    return res.send({ message: "You have successfully logged out!" });
   }
+
 
 
   @ApiResponse({

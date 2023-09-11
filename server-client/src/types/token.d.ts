@@ -13,3 +13,4 @@ export type TypeTokenDecoded = {
   role: UserRole;
   emailVerified: boolean;
 };
+

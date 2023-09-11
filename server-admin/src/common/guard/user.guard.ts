@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { TOKENS } from '../../constants';
 import { TypeTokenDecoded } from '../../types/token.d';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 
 
@@ -13,6 +14,7 @@ export class UserGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private jwtService: JwtService,
+    private prisma: PrismaService
   ) {
 
   }
@@ -36,7 +38,7 @@ export class UserGuard implements CanActivate {
 
 
 
-    const token = request.cookies?.[TOKENS.REFRESH_TOKEN] ?? request.headers.authorization.split(' ')[1]
+    const token = request.cookies?.[TOKENS.TOKEN] ?? request.headers.authorization.split(' ')[1]
 
     if (!token) return false
 
@@ -47,6 +49,15 @@ export class UserGuard implements CanActivate {
     const { sub } = this.jwtService.decode(token) as TypeTokenDecoded
 
     if (!sub) return false
+
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id:sub
+      }
+    })
+    if (!user) return false
+    
+    if(user.role === 'Admin') return true
 
     if (sub !== userId) return false
 

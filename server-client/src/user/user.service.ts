@@ -1,4 +1,4 @@
-import {  Injectable, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt'
 
 import { PrismaClientKnownRequestError, PrismaClientUnknownRequestError, PrismaClientValidationError } from '@prisma/client/runtime/library';
@@ -16,7 +16,6 @@ import { generateErrorResponse } from 'src/helpers';
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService, private mailer: MailService, private cloudinary: CloudinaryService) { }
-
 
   public async getUser(userId: string) {
     try {
@@ -198,7 +197,7 @@ export class UserService {
         }
       })
     } catch (err) {
-      throw  generateErrorResponse(err, { message: "Verification Error", description: 'user/internal-error', cause: "Internal error" })
+      throw generateErrorResponse(err, { message: "Verification Error", description: 'user/internal-error', cause: "Internal error" })
     }
   }
 

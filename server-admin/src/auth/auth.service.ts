@@ -6,7 +6,6 @@ import {
 import { PrismaService } from "../prisma/prisma.service";
 import { SignInDto } from "./dto/sign-in.dto";
 import { generateErrorResponse } from "../helpers";
-import { TypeTokens } from "../types/token.d";
 import * as bcrypt from 'bcrypt'
 import { User, UserRole } from "@prisma/client";
 import { TOKEN_SECRET } from "../constants";
@@ -17,7 +16,7 @@ import { JwtService } from "@nestjs/jwt";
 export class AuthService {
     constructor(private prisma: PrismaService, private jwtService: JwtService) { }
 
-    public async signIn(dto: SignInDto): Promise<{ token: Pick<TypeTokens, 'token'>, user: User }> {
+    public async signIn(dto: SignInDto): Promise<{ token: string, user: User }> {
         try {
             const user = await this.prisma.user.findUnique({
                 where: {
@@ -57,8 +56,8 @@ export class AuthService {
     private async getToken(userId: string,
         email: string,
         role: UserRole,
-        emailVerified: boolean): Promise<TypeTokens> {
-        const [at] = await Promise.all([
+        emailVerified: boolean): Promise<string> {
+        const [token] = await Promise.all([
             this.jwtService.signAsync(
                 {
                     sub: userId,
@@ -73,7 +72,7 @@ export class AuthService {
             ),
         ]);
 
-        return { token: at };
+        return token;
     }
 
 }

@@ -10,6 +10,7 @@ import {
 import { JwtModule } from '@nestjs/jwt';
 import { ACCESS_TOKEN_SECRET } from '../constants';
 
+
 @Global()
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { ACCESS_TOKEN_SECRET } from '../constants';
     RtStrategy,
     AtStrategy,
     GoogleStrategy,
-    TwitterStrategy,
+    TwitterStrategy
   ],
   controllers: [AuthController],
   exports: [AuthService],

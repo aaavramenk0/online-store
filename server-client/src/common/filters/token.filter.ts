@@ -20,7 +20,6 @@ export class TokenExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<Request>();
     const res = ctx.getResponse<Response>();
-
     const status = exception.getStatus() || HttpStatus.INTERNAL_SERVER_ERROR
 
     if (status === 401) {

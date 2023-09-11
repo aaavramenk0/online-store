@@ -28,7 +28,7 @@ export class AuthService {
   ) { }
 
   //Реєструємо нового користувача
-  public async signUpLocal(dto: SignUpDto): Promise<TypeTokens> {
+  public async signUpLocal(dto: SignUpDto): Promise<{ tokens: TypeTokens, user: User }> {
     try {
       //Перевіряємо чи є користувач з такими даними вже в базі даних
       const existingUser = await this.prisma.user.findUnique({
@@ -63,7 +63,9 @@ export class AuthService {
       await this.updateRtHash(newUser.id, tokens.refresh_token);
 
 
-      return tokens;
+      return {
+        tokens, user: newUser
+      };
     } catch (err) {
       throw generateErrorResponse(err, {
         message: 'Internal Error',
@@ -73,7 +75,7 @@ export class AuthService {
   }
 
   //Sign In with credentials, а саме за допомогою email та password
-  public async signInLocal(dto: SignInDto): Promise<TypeTokens> {
+  public async signInLocal(dto: SignInDto): Promise<{ tokens: TypeTokens, user: User }> {
     try {
       const user = await this.prisma.user.findUnique({
         where: {
@@ -106,7 +108,10 @@ export class AuthService {
 
       await this.updateRtHash(user.id, tokens.refresh_token);
 
-      return tokens
+      return {
+        tokens,
+        user
+      }
     } catch (err) {
       throw generateErrorResponse(err, {
         message: 'Internal Error',
@@ -114,6 +119,7 @@ export class AuthService {
       });
     }
   }
+
 
   //Реєстрація з гуглом
   public async signInWithGoogle(user: User | undefined) {
@@ -233,7 +239,7 @@ export class AuthService {
       if (tokenDecoded.exp < now) {
         throw new UnauthorizedException('Unauthorized', {
           cause: "The refresh token has expired",
-          description:"auth/invalid-refresh-token"
+          description: "auth/invalid-refresh-token"
         });
       }
 
