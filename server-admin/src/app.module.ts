@@ -5,7 +5,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { MailModule } from './mail/mail.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
-import { TokenGuard, RolesGuard } from "./common/guard";
+import { TokenGuard, RolesGuard, AdminPanelGuard } from "./common/guard";
 import { UserModule } from './user/user.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
@@ -25,6 +25,10 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     {
       provide: APP_GUARD,
       useClass: RolesGuard
+    },
+    {
+      provide: APP_GUARD,
+      useClass: AdminPanelGuard
     }
   ]
 })
