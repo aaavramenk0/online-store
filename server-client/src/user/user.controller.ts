@@ -7,7 +7,7 @@ import { ApiBody, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 
 @ApiTags('user')
-@UseGuards(UserGuard)
+@UseGuards(AtGuard,UserGuard)
 @Controller('user')
 export class UserController {
   constructor(private userService: UserService) { }
@@ -33,7 +33,6 @@ export class UserController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: "Internal Server Error"
   })
-  @UseGuards(AtGuard)
   @Get('/get/:id')
   @HttpCode(HttpStatus.OK)
   getUser(@Param('id') userId: string) {
@@ -56,7 +55,6 @@ export class UserController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: "Internal Server Error"
   })
-  @UseGuards(AtGuard)
   @Post('/:id/email/verify/send')
   @HttpCode(HttpStatus.OK)
   sendVerificationCode(@Param('id') userId: string) {
@@ -79,7 +77,6 @@ export class UserController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: "Internal Server Error"
   })
-  @UseGuards(AtGuard)
   @Post("/:id/password/reset")
   @HttpCode(HttpStatus.OK)
   sendPassword(@Param("id") userId: string, @Body() dto: PasswordResetDto) {
@@ -137,7 +134,6 @@ export class UserController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: "Internal Server Error"
   })
-  @UseGuards(AtGuard)
   @Patch('/update/:id')
   @HttpCode(HttpStatus.OK)
   updateUser(@Param("id") userId: string, @Body() dto: UpdateUserDto) {
