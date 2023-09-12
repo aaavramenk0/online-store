@@ -14,13 +14,13 @@ import { User } from '@prisma/client';
 import { ApiBody, ApiTags, ApiResponse, ApiOAuth2 } from '@nestjs/swagger';
 
 import { GetCurrentUserId } from 'src/common/decorators';
-import { GoogleOauthGuard, TwitterGuard, RtGuard } from 'src/auth/guard';
+import { GoogleOauthGuard, TwitterGuard, RtGuard, SignInRolesGuard } from 'src/auth/guard';
 
 import { AuthService } from './auth.service';
 import { LogOutDto, SignInDto, SignUpDto } from './dto';
 
 import { TOKENS } from '../constants';
-import { AtGuard } from 'src/common/guard';
+import { Admin, AtGuard } from 'src/common/guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -98,6 +98,77 @@ export class AuthController {
     });
 
     return res.send(userData);
+  }
+
+  @ApiBody({
+    type: SignInDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "The user has successfully logged in"
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: "User not found"
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: "User does not have an active password in the database"
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: "Passwords don't match OR Invalid role"
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: "Internal Server Error"
+  })
+  @UseGuards(SignInRolesGuard) //TODO: додати AdminPanelGuard
+  @Post('admin/sign-in')
+  @HttpCode(HttpStatus.OK)
+  async signIn(@Body() dto: SignInDto, @Res() res: Response) {
+    const userData = await this.authService.signInToAdminPanel(dto)
+
+    res.cookie(TOKENS.ADMIN_TOKEN, userData.token, {
+      httpOnly: true,
+      //TODO: Змінити це значення, на термін дії токена
+      maxAge: 1000 * 60 * 30
+    })
+
+    return res.send(userData)
+  }
+
+
+  @ApiBody({
+    type: LogOutDto,
+  })
+  @ApiResponse({
+    status: 302,
+    description: "The user has successfully logged out"
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: "Unauthorized"
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: "User not found"
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: "Invalid role"
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: "Internal Server Error"
+  })
+  @Admin()
+  @Post('admin/log-out')
+  @HttpCode(HttpStatus.OK)
+  adminPanelLogOut(@Res() res: Response, @Body() dto: LogOutDto) {
+    res.clearCookie(TOKENS.ADMIN_TOKEN)
+
+    return res.send({ message: "You have successfully logged out!" }).redirect(dto.redirectUrl)
   }
 
 
@@ -201,7 +272,7 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleOauthGuard)
   async googleAuthCallback(@Req() req: Request, @Res() res: Response) {
-    const tokens = await this.authService.signInWithOAuth(req?.user as User)
+    const tokens = await this.authService.signInWithOAuth(req.user as User);
 
     res.cookie(TOKENS.ACCESS_TOKEN, tokens.access_token, {
       httpOnly: false,

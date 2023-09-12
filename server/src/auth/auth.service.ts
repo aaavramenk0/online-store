@@ -17,7 +17,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 import { SignInDto, SignUpDto } from './dto';
 import { TypeTokenDecoded, TypeTokens } from '../types/token.d';
-import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from '../constants';
+import { ACCESS_TOKEN_SECRET, ADMIN_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from '../constants';
 import { generateErrorResponse } from 'src/helpers';
 
 @Injectable()
@@ -75,29 +75,37 @@ export class AuthService {
   }
 
   //Sign In with credentials, а саме за допомогою email та password
+
+
+  private async checkUserData(dto: SignInDto): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email: dto.email,
+      },
+    });
+    if (!user)
+      throw new NotFoundException('User not found', {
+        description: 'auth/user-not-found',
+      });
+
+    if (!user?.hash)
+      throw new BadRequestException('Password is not set', {
+        description: 'auth/password-is-not-set-in-database',
+      });
+
+    const isPasswordsMatches = await bcrypt.compare(dto.password, user.hash);
+
+    if (!isPasswordsMatches)
+      throw new ForbiddenException("Passwords don't match", {
+        description: 'auth/passwords-do-not-match',
+      });
+
+    return user
+  }
+
   public async signInLocal(dto: SignInDto): Promise<{ tokens: TypeTokens, user: User }> {
     try {
-      const user = await this.prisma.user.findUnique({
-        where: {
-          email: dto.email,
-        },
-      });
-      if (!user)
-        throw new NotFoundException('User not found', {
-          description: 'auth/user-not-found',
-        });
-
-      if (!user?.hash)
-        throw new BadRequestException('Password is not set', {
-          description: 'auth/password-is-not-set-in-database',
-        });
-
-      const isPasswordsMatches = await bcrypt.compare(dto.password, user.hash);
-
-      if (!isPasswordsMatches)
-        throw new ForbiddenException("Passwords don't match", {
-          description: 'auth/passwords-do-not-match',
-        });
+      const user = await this.checkUserData(dto)
 
       const tokens = await this.getTokens(
         user.id,
@@ -117,6 +125,25 @@ export class AuthService {
         message: 'Internal Error',
         description: 'auth/internal-error',
       });
+    }
+  }
+
+  public async signInToAdminPanel(dto: SignInDto) {
+    try {
+      const user = await this.checkUserData(dto)
+
+      const token = await this.getAdminToken(
+        user.id,
+        user.email,
+        user.role,
+        user.emailVerified,
+      )
+      return {
+        token,
+        user
+      }
+    } catch (err) {
+      throw generateErrorResponse(err, { description: 'auth/internal-error' })
     }
   }
 
@@ -300,5 +327,27 @@ export class AuthService {
     ]);
 
     return { access_token: at, refresh_token: rt };
+  }
+
+  private async getAdminToken(userId: string,
+    email: string,
+    role: UserRole,
+    emailVerified: boolean): Promise<string> {
+    const [token] = await Promise.all([
+      this.jwtService.signAsync(
+        {
+          sub: userId,
+          email,
+          role,
+          emailVerified,
+        },
+        {
+          expiresIn: '30m',
+          secret: ADMIN_TOKEN_SECRET,
+        },
+      ),
+    ]);
+
+    return token;
   }
 }

@@ -1,11 +1,11 @@
-import {PassportStrategy} from "@nestjs/passport";
-import {ExtractJwt, Strategy} from 'passport-jwt'
-import {Injectable, UnauthorizedException} from "@nestjs/common";
-import {UserRole} from "@prisma/client";
-import {Request} from "express";
+import { PassportStrategy } from "@nestjs/passport";
+import { ExtractJwt, Strategy } from 'passport-jwt'
+import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { UserRole } from "@prisma/client";
+import { Request } from "express";
 
-import {TOKEN_SECRET, TOKENS} from "../../constants";
-import {PrismaService} from "../../prisma/prisma.service";
+import { ADMIN_TOKEN_SECRET, TOKENS } from "../../constants";
+import { PrismaService } from "../../prisma/prisma.service";
 
 type TypeJwtPayload = {
     sub: string;
@@ -14,18 +14,18 @@ type TypeJwtPayload = {
     emailVerified: boolean;
 };
 @Injectable()
-export class TokenStrategy extends  PassportStrategy(Strategy, 'jwt') {
-    constructor(private prisma : PrismaService) {
+export class AdminTokenStrategy extends PassportStrategy(Strategy, 'jwt-admin') {
+    constructor(private prisma: PrismaService) {
         const extractJwtFromCookie = (req: Request) => {
             let token = null;
             if (req && req.cookies) {
-                token = req.cookies?.[TOKENS.TOKEN];
+                token = req.cookies?.[TOKENS.ADMIN_TOKEN];
             }
             return token ?? ExtractJwt.fromAuthHeaderAsBearerToken()(req);
         };
         super({
-            secretOrKey: TOKEN_SECRET,
-            ignoreExpiration:false,
+            secretOrKey: ADMIN_TOKEN_SECRET,
+            ignoreExpiration: false,
             jwtFromRequest: extractJwtFromCookie
         })
     }
@@ -38,7 +38,6 @@ export class TokenStrategy extends  PassportStrategy(Strategy, 'jwt') {
                 role: payload.role,
             },
         });
-
         if (!user) throw new UnauthorizedException('Unauthorized');
 
         return payload;
