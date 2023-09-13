@@ -1,17 +1,21 @@
+
 import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaClientKnownRequestError, PrismaClientUnknownRequestError, PrismaClientValidationError } from '@prisma/client/runtime/library';
 
 
-import { generateErrorResponse } from 'src/helpers';
+import { bcrypt, generateErrorResponse } from 'src/helpers';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { MailService } from 'src/mail/mail.service';
+
 
 import { TypeGetUsersQuery } from './types';
-import { UpdateUserDto } from './dto';
+import { PasswordResetDto, UpdateUserDto } from './dto';
+import { Job, scheduleJob } from 'node-schedule';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService, private cloudinary: CloudinaryService) { }
+  constructor(private prisma: PrismaService, private cloudinary: CloudinaryService, private mailer: MailService) { }
 
 
   public async getUsers(query: TypeGetUsersQuery) {
@@ -87,7 +91,6 @@ export class UserService {
         },
         data: {
           role: dto.role,
-          username: dto.username
         }
       }).catch(err => {
         if (err instanceof PrismaClientKnownRequestError) {
@@ -148,5 +151,161 @@ export class UserService {
     } catch (err) {
       throw generateErrorResponse(err, { message: 'Failed to delete user', cause: 'Internal error', description: 'user/internal-error' })
     }
+  }
+
+
+  public async sendEmailVerificationCode(userId: string) {
+    try {
+      const user = await this.getUser(userId)
+
+      const verificationCode = this.generateVerificationCode(6)
+
+      const hashedCode = await bcrypt.hash(`${verificationCode}`)
+
+
+      //Видаляємо всі попередні коди
+      await this.prisma.verificationCode.deleteMany({
+        where: {
+          userId
+        }
+      })
+
+      const dbVerificationCodeObject = await this.prisma.verificationCode.create({
+        data: {
+          code: hashedCode,
+          userId,
+          expiration: new Date(Date.now() + (1000 * 60 * 2))
+        }
+      })
+
+      await this.mailer.sendEmailVerificationCode(user, verificationCode)
+
+      const job: Job = scheduleJob(dbVerificationCodeObject.expiration, async () => {
+        try {
+          await this.prisma.verificationCode.delete({
+            where: {
+              id: dbVerificationCodeObject.id
+            }
+          })
+        } finally {
+          job.cancel()
+        }
+      })
+
+
+      return dbVerificationCodeObject
+    } catch (err) {
+      throw generateErrorResponse(err, { message: "Internal Error", description: 'user/internal-error', cause: "Internal error" })
+    }
+  }
+
+  public async sendPasswordResetLink(userId: string, link: string) {
+    try {
+      const user = await this.getUser(userId)
+
+      const hashedLink = await bcrypt.hash(link)
+
+      await this.prisma.passwordResetLink.deleteMany({
+        where: {
+          userId
+        }
+      })
+
+      const passwordResetDbObject = await this.prisma.passwordResetLink.create({
+        data: {
+          link: hashedLink,
+          userId,
+          expiration: new Date(Date.now() + (1000 * 60 * 5))
+        }
+      })
+
+      await this.mailer.sendPasswordResetLink(user, link)
+
+      const job: Job = scheduleJob(passwordResetDbObject.expiration, async () => {
+        try {
+          await this.prisma.passwordResetLink.delete({
+            where: {
+              id: passwordResetDbObject.id
+            }
+          })
+        } finally {
+          job.cancel()
+        }
+      })
+    } catch (err) {
+      throw generateErrorResponse(err, { message: "Verification Error", description: 'user/internal-error', cause: "Internal error" })
+    }
+  }
+
+
+  public async resetPassword(userId: string, dto: PasswordResetDto) {
+    try {
+       await this.getUser(userId);
+
+      const hash = await bcrypt.hash(dto.password)
+
+      const updatedUser = await this.prisma.user.update({
+        where: {
+          id: userId
+        },
+        data: {
+          hash
+        }
+      })
+
+      return updatedUser
+    } catch (err) {
+      throw generateErrorResponse(err, { message: "Failed to change password", cause: "Internal error", description: "user/internal-error" })
+    }
+  }
+
+  public async verifyEmail(userId: string, code: number) {
+    try {
+      const verificationCodes = await this.prisma.verificationCode.findMany({
+        where: {
+          userId
+        }
+      })
+
+      for (const verificationCode of verificationCodes) {
+        if (Date.now() > new Date(verificationCode.expiration).getTime()) {
+          await this.prisma.verificationCode.delete({
+            where: {
+              id: verificationCode.id
+            }
+          })
+        } else {
+          const isCodeValid = await bcrypt.compare(`${code}`, verificationCode.code);
+
+          if (isCodeValid) {
+            await this.prisma.user.update({
+              where: {
+                id: userId
+              },
+              data: {
+                emailVerified: true
+              }
+            })
+
+            break
+          }
+        }
+      }
+
+      return {
+        message: "Email successfully verified"
+      }
+    } catch (err) {
+      throw generateErrorResponse(err, { message: "Verification Error", description: 'user/internal-error', cause: "Internal error" })
+    }
+  }
+
+  private generateVerificationCode(length: number): number {
+    let code: number = 0;
+    for (let i = 1; i < length; i++) {
+      const randomNumber = Math.floor(Math.random() * 10)
+      code = (code * 10) + randomNumber
+    }
+    return code
   }
 }

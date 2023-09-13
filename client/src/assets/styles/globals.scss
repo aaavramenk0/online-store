@@ -4,7 +4,7 @@
 
 @import "./variables.scss";
 @import "./mixins.scss";
-@import './common.scss';
+@import "./common.scss";
 
 @layer base {
   :root {
@@ -77,4 +77,10 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+[class*="__container"] {
+  max-width: #{$containerWidth + px};
+  margin-inline: 0 auto;
+  padding: #{$containerPadding + px};
 }

@@ -197,7 +197,7 @@ export class UserService {
         }
       })
     } catch (err) {
-      throw generateErrorResponse(err, { message: "Verification Error", description: 'user/internal-error', cause: "Internal error" })
+      throw generateErrorResponse(err, { message: "Failed to send password reset link to your email", description: 'user/internal-error', cause: "Internal error" })
     }
   }
 

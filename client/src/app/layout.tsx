@@ -1,11 +1,11 @@
-import { cn } from '@/lib/utils'
-import { RootProvider } from '@/providers'
 import type { Metadata } from 'next'
 
-import '@/styles/globals.scss'
-import { causten, coreSans } from '@/utils'
+import '@/assets/styles/globals.scss'
+import { causten, coreSans } from '@/assets/fonts'
 
+import { RootProvider } from '../components/providers'
 
+import { cn } from '@/lib'
 
 export const metadata: Metadata = {
 	title: 'Euphoria'
